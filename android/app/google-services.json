@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "836790629543",
+    "firebase_url": "https://smart-home-app-4890a-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "smart-home-app-4890a",
+    "storage_bucket": "smart-home-app-4890a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:836790629543:android:5b181c617555cdde6c5782",
+        "android_client_info": {
+          "package_name": "com.example.udemyapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKZmSUgJwszcx9jGH_7TXNJ_WfdWr5Drk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
