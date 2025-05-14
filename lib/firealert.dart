@@ -15,6 +15,27 @@ class FireLakePage extends StatefulWidget {
 class _FireLakePageState extends State<FireLakePage> {
   bool isFireLeaking =false;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final TextEditingController _passwordcontroller = TextEditingController();
+
+  void _alarmKapat(){
+    String sifre = _passwordcontroller.text;
+
+    if(sifre == "1234"){
+      stopAlarm();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: 
+        Text("Şifre doğrulandı, alarm aktif",style: TextStyle(fontWeight: FontWeight.bold),),
+        duration: Duration(seconds: 3),
+        backgroundColor: Colors.green,));
+    }
+    else{
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: 
+        Text("ŞİFRE EKSİK YA DA HATALI!!, TEKRAR DENEYİNİZ",style: TextStyle(fontWeight: FontWeight.bold),),
+        duration: Duration(seconds: 3),
+        backgroundColor: Colors.red,));
+    }
+  }
 
   void resetGasLeak(){
     final DatabaseReference ref = FirebaseDatabase.instance.ref("sensorverileri/duman_kacagi");
@@ -108,9 +129,30 @@ class _FireLakePageState extends State<FireLakePage> {
                   ),
                   SizedBox(height: 15,),
                   ElevatedButton.icon(onPressed: (){
-                    stopAlarm();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("!! Yangın aktif olabilir. Kontrol ediniz..",style: TextStyle(color: Colors.red,fontWeight: FontWeight.bold,fontSize: 15),),
-                    duration: Duration(seconds: 10),
+                    showDialog(context: context, builder: (context)=>AlertDialog(
+                       title: Text("Alarm Yönetimi"),
+                       content: TextField(
+                        controller: _passwordcontroller,
+                        decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                        labelText: 'Şifre',labelStyle: TextStyle(fontWeight: FontWeight.bold)
+                  ),
+                  cursorColor: Colors.deepOrange,
+                  maxLines: 1,
+                  obscureText: true,
+                      ), 
+                      actions: [
+                        ElevatedButton(onPressed: (){
+                          _alarmKapat();
+                          Navigator.of(context).pop();
+                        }, child: Text("Alarmı Kapat",style: TextStyle(color: Colors.white),),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),)
+                      ],
+                       
+                    ));
+
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("!! Yangın riski devam ediyor olabilir. Kontrol ediniz..",style: TextStyle(color: Colors.red,fontWeight: FontWeight.bold,fontSize: 15),),
+                    duration: Duration(seconds: 3),
                     backgroundColor: Colors.white,));
                   }, 
                   label: Text("Alarmı Kapat",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),),
@@ -125,12 +167,60 @@ class _FireLakePageState extends State<FireLakePage> {
                   SizedBox(height: 15,),
                   ElevatedButton.icon(onPressed: resetGasLeak, label:
                   Icon(Icons.security,color: Colors.white,),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),)
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),),
+                  
                 ]
                ],
             )
             ),
+            floatingActionButton: FloatingActionButton.extended(onPressed:(){
+              showModalBottomSheet(
+        context: context,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
         ),
+        backgroundColor: Colors.white,
+        builder: (BuildContext context) {
+          return Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.warning, size: 50, color: Colors.red),
+                SizedBox(height: 10),
+                Text(
+                  "Yangın Anında Yapılacaklar",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  "✅ Sakin kalın.\n\n"
+                  "✅ Acil çıkışlara yönelin.\n\n"
+                  "✅ Asansör kullanmayın.\n\n"
+                  "✅ Ağız/burun kapatın.\n\n"
+                  "✅ Binayı terk edin.",
+                  style: TextStyle(fontSize: 16, height: 1.4),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  child: Text("Kapat",style: TextStyle(color: Colors.white),),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+            }, 
+            icon: Icon(Icons.add,color: Colors.white,) ,
+            label: Text("Yangın Talimatları",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+            backgroundColor: Colors.blue[400],),
+        )
       
     );
   }

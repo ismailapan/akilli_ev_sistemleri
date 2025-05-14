@@ -20,6 +20,24 @@ bool isMoveAlert =true;
 final AudioPlayer audioPlayer = AudioPlayer();
 double _iconOpacity = 1.0;
 late Timer _blinktimer;
+final TextEditingController _passwordcontroller = TextEditingController();
+
+void _alarmKapat(){
+  String sifre = _passwordcontroller.text;
+  if(sifre == "1234"){
+    _stopalarm();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Şifre doğru, alarm aktif",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+      duration:Duration(seconds: 3),
+      backgroundColor: Colors.green,));
+  }
+  else{
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("ŞİFRE HATALI YA DA EKSİK!!, TEKRAR DENEYİNİZ",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+      duration:Duration(seconds: 3),
+      backgroundColor: Colors.red,));
+  }
+}
 
 void _resetmovealert(){
   final DatabaseReference reference = FirebaseDatabase.instance.ref('sensorverileri/hareket_kontrol');
@@ -137,10 +155,30 @@ void dispose(){
               )),
               SizedBox(width: 15,),
               ElevatedButton.icon(onPressed: (){
-                _stopalarm();
+                showDialog(context: context, builder: (context)=> AlertDialog(
+                  title: Text("Alarm Yönetimi"),
+                       content: TextField(
+                        controller: _passwordcontroller,
+                        decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                        labelText: 'Şifre',labelStyle: TextStyle(fontWeight: FontWeight.bold)
+                  ),
+                  cursorColor: Colors.deepOrange,
+                  maxLines: 1,
+                  obscureText: true,
+                      ), 
+                      actions: [
+                        ElevatedButton(onPressed: (){
+                          _alarmKapat();
+                          Navigator.of(context).pop();
+                        }, child: Text("Alarmı Kapat",style: TextStyle(color: Colors.white),),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),)
+                      ],
+                ));
+                
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Şüpheli hareket algılandı,acil durumu bildiriniz.",
                 style: TextStyle(fontWeight: FontWeight.bold,fontSize: 17),),backgroundColor: Colors.red,
-                duration: Duration(seconds: 5),));
+                duration: Duration(seconds: 3),));
               }, label: Text("Alarmı Kapat",
               style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
               icon: Icon(Icons.volume_off_outlined,color: Colors.white,),

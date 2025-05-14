@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:udemyapp/flags.dart';
 import 'package:udemyapp/main.dart';
@@ -15,9 +16,25 @@ class GasLeakPage extends StatefulWidget {
 }
 
 class _GasLeakPageState extends State<GasLeakPage> {
-  
   bool isGasLeaking = false; 
   final AudioPlayer _audioPlayer = AudioPlayer();
+final TextEditingController _passwordcontroller = TextEditingController();
+  void alarmKapat(){
+    String sifre = _passwordcontroller.text;
+
+    if(sifre == "1234"){
+      stopAlarm();
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Şifre doğrulandı, alarm aktif",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+      duration: Duration(seconds: 3),
+      backgroundColor: Colors.green,));
+    }
+    else{
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("ŞİFRE BİLGİSİ YANLIŞ, TEKRAR DENEYİNİZ !",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
+      duration: Duration(seconds: 3),
+      backgroundColor: Colors.red,));
+    }
+  }
   
   void bildirimgonder(){
     AwesomeNotifications().createNotification(
@@ -27,7 +44,6 @@ class _GasLeakPageState extends State<GasLeakPage> {
       notificationLayout: NotificationLayout.Default,)
     );
   }
-
   void resetGasLeak(){
     final DatabaseReference reference = FirebaseDatabase.instance.ref('sensorverileri/gaz_kacagi');
     reference.set(0);
@@ -41,6 +57,14 @@ class _GasLeakPageState extends State<GasLeakPage> {
   }
   void initState (){
     super.initState();
+    void setupFirebaseMessaging(){
+      FirebaseMessaging.instance.getToken().then((token){
+      print("cihaz tokeni: $token");
+    });
+    FirebaseMessaging.onMessage.listen((RemoteMessage message){
+      print(" Uygulama açıkken bildirim: ${message.notification?.title}");
+    });
+    }
     bildirimizni();
     final DatabaseReference ref = FirebaseDatabase.instance.ref('sensorverileri/gaz_kacagi');
     
@@ -48,7 +72,7 @@ class _GasLeakPageState extends State<GasLeakPage> {
       final dynamic data = event.snapshot.value;
 
       if (data.toString() == '1') {
-        bildirimgonder();
+       // bildirimgonder();
         playAlarm();
         setState(() {
           isGasLeaking = true;
@@ -62,8 +86,6 @@ class _GasLeakPageState extends State<GasLeakPage> {
     });
   }
 
-  
-  
   Widget build(BuildContext context) {
     final ekranYukseklik = MediaQuery.of(context).size.height;
     final ekranGenislik = MediaQuery.of(context).size.width;
@@ -93,8 +115,7 @@ class _GasLeakPageState extends State<GasLeakPage> {
                   color: isGasLeaking ? Colors.red : Colors.green,
                 ),
               ),
-              SizedBox(height: ekranYukseklik*0.02),
-          
+              SizedBox(height: ekranYukseklik*0.02),        
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
@@ -106,13 +127,28 @@ class _GasLeakPageState extends State<GasLeakPage> {
                 ),
               ),
               SizedBox(height: 30),
-          
               if (isGasLeaking) ...[
                 ElevatedButton.icon(
                   onPressed: (){
-                    stopAlarm();
+                    showDialog(context: context, builder: (context)=>AlertDialog(
+                      title: Text("Alarm Yönetimi"),
+                      backgroundColor: Colors.white,
+                      content: TextField(
+                        controller: _passwordcontroller,
+                        decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                        labelText: 'Şifre',labelStyle: TextStyle(fontWeight: FontWeight.bold)
+                  ),
+                  cursorColor: Colors.deepOrange,
+                  maxLines: 1,
+                  obscureText: true,
+                      ),
+                      actions: [
+                        ElevatedButton(onPressed: alarmKapat, child: Text("Alarm Kapat"))
+                      ],
+                    ));
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("!! Gaz kaçağı durumu devam ediyor olabilir. Kontrol ediniz...",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15),),
-                           duration: Duration(seconds: 5),
+                           duration: Duration(seconds: 3),
                           backgroundColor: Colors.deepOrange[900],));
                   },
                   icon: Icon(Icons.volume_off),
@@ -124,20 +160,25 @@ class _GasLeakPageState extends State<GasLeakPage> {
                   ),
                 ),
                 SizedBox(height: 15),
-                ElevatedButton.icon(
-                  onPressed: ()async{
-                    final Uri phonenumber = Uri.parse("tel:112");
-                    await launchUrl(phonenumber, mode: LaunchMode.externalApplication);
-                  },
-                  icon: Icon(Icons.call),
-                  label: Text("112'yi Ara"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-                SizedBox(height: 15,),
+                ElevatedButton.icon(onPressed: (){
+                  showDialog(context: context, builder: (context)=> AlertDialog(
+                    title: Text("Acil Durum Bildirimleri",style: TextStyle(fontWeight: FontWeight.bold),),
+                    backgroundColor: Colors.red[400],
+                    content: Row(
+                      children: [
+                        ElevatedButton.icon(onPressed: ()async{
+                          final Uri phonenumber = Uri.parse("tel:112");
+                          await launchUrl(phonenumber, mode: LaunchMode.externalApplication);
+                        }, label: Text("ARA 112",style: TextStyle(color: Colors.white),),icon: Icon(Icons.call,color: Colors.white,),style: ElevatedButton.styleFrom(backgroundColor: Colors.green),),
+                        ElevatedButton.icon(onPressed: ()async{
+                          final Uri phonenumber = Uri.parse("tel:187");
+                          await launchUrl(phonenumber, mode: LaunchMode.externalApplication);
+                        }, label: Text("ARA 187",style: TextStyle(color: Colors.white),),icon: Icon(Icons.call,color: Colors.white,),style: ElevatedButton.styleFrom(backgroundColor: Colors.green),),
+                      ],
+                    ),
+                  ));
+                }, label: Icon(Icons.phone,color: Colors.white,),style: ElevatedButton.styleFrom(backgroundColor: Colors.red),),
+                SizedBox(height: 15),
                 ElevatedButton.icon(onPressed: resetGasLeak, label: Icon(Icons.security,color: Colors.white,),style: ElevatedButton.styleFrom(backgroundColor: Colors.green),)
               ] else ...[
                 Text(
@@ -149,6 +190,43 @@ class _GasLeakPageState extends State<GasLeakPage> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: (){
+        showModalBottomSheet(context: context, isScrollControlled: true ,builder: (BuildContext context){
+        return SingleChildScrollView(
+          child: Padding(padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+             Icon(Icons.gas_meter, size: 50, color: Colors.orange),
+                SizedBox(height: 10),
+                Text(
+                  "Gaz Kaçağı Anında Yapılacaklar",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  "✅ Gaz vanasını hemen kapatın.\n\n"
+                  "✅ Elektrik düğmelerine ve açık alevlere dokunmayın.\n\n"
+                  "✅ Kapı ve pencereleri açarak evi havalandırın.\n\n"
+                  "✅ Binayı derhal terk edin.\n\n"
+                  "✅ Güvenli mesafeden 187 Doğalgaz Acil hattını arayın.\n\n"
+                  "✅ Diğer bina sakinlerini bilgilendirin.",
+                  style: TextStyle(fontSize: 16, height: 1.4),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  child: Text("Kapat"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ) 
+            ]
+          ),),
+        );
+
+        });
+      }, icon: Icon(Icons.add,color: Colors.black,),label:Text("Acil Durumlar",style: TextStyle(color: Colors.black),) )
     );
   }
 }
